@@ -15,6 +15,8 @@ const initialState = {
   blogs: null as IBlog[] | null,
 };
 
+// For Fetch Blog
+
 export const fetchBlogs = createAsyncThunk("blogsFetch", async () => {
   try {
     const res = await axiosInstance.get<IBlogResponse>(endpoints.blog.blog);

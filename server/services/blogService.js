@@ -1,4 +1,3 @@
-const mongoose = require("mongoose");
 const Blog = require("../models/blogModel");
 const Comment = require("../models/commentModel");
 
@@ -11,6 +10,7 @@ const createBlogService = async (payload) => {
     throw new Error(err?.message);
   }
 };
+
 
 const getAllBlogServices = async () => {
   try {
