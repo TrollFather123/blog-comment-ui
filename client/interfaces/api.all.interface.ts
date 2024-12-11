@@ -150,10 +150,6 @@ export interface IBlogDetailsResponse {
 }
 
 
-
-
-
-
 export interface IGetUserDataResponse {
   status: number;
   message: string;

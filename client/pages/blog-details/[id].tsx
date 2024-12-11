@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import EditDrawer from "@/components/EditDrawer/EditDrawer";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
@@ -29,7 +30,7 @@ import moment from "moment";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { parseCookies } from "nookies";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 const DetailsBlock = styled(Box)`
@@ -45,6 +46,86 @@ const DetailsBlock = styled(Box)`
   }
 `;
 
+interface Props {
+  commentId: string;
+  authorName: string;
+  comment: string;
+  authorId: string;
+  commentValue:string;
+  userId: string;
+  setCommentValueCallback: (data: string) => void;
+  handleUpdateCommentCallback: (data: string) => void;
+  handleDeleteCommentCallback: (data: string) => void;
+}
+
+const CustomListItem = ({
+  authorName,
+  userId,
+  commentId,
+  commentValue,
+  comment,
+  authorId,
+  handleDeleteCommentCallback,
+  handleUpdateCommentCallback,
+  setCommentValueCallback,
+}: Props) => {
+  const [isEditMain, setIsEditMain] = useState<boolean>(false);
+  const [commentValueMain, setCommentValueMain] = useState<string>("");
+
+  useEffect(()=>{
+    if(commentValue){
+      setCommentValueMain(commentValue)
+    }
+  },[commentValue])
+
+  return (
+    <ListItem
+      sx={{
+        backgroundColor: (theme: Theme) => theme.palette.action.disabled,
+        display: "block",
+        width: "100%",
+        marginBottom: "10px",
+      }}
+    >
+      <Typography variant="h6">Author: {authorName}</Typography>
+      {isEditMain && userId === authorId ? (
+        <TextField
+          placeholder="Enter Comment"
+          value={commentValueMain}
+          onChange={(e) => {
+            setCommentValueCallback(e.target.value);
+            setCommentValueMain(e.target.value);
+          }}
+        />
+      ) : (
+        <Typography>comment: {comment}</Typography>
+      )}
+
+      {userId === authorId && (
+        <>
+          {!isEditMain ? (
+            <Button
+              onClick={() => {
+                setIsEditMain(true);
+                setCommentValueCallback(comment);
+              }}
+            >
+              Edit
+            </Button>
+          ) : (
+            <Button onClick={() => handleUpdateCommentCallback(commentId)}>
+              Submit
+            </Button>
+          )}
+          <Button onClick={() => handleDeleteCommentCallback(commentId)}>
+            Delete
+          </Button>
+        </>
+      )}
+    </ListItem>
+  );
+};
+
 const Index = () => {
   const cookies = parseCookies();
   const userId = cookies["user_id"];
@@ -52,7 +133,6 @@ const Index = () => {
   const router = useRouter();
   const { blogLoading } = useAppSelector((s) => s.blog);
   const dispatch = useAppDispatch();
-  const [isEdit, setIsEdit] = useState<boolean>(false);
   const [commentValue, setCommentValue] = useState<string>("");
 
   const [open, setOpen] = React.useState(false);
@@ -122,7 +202,6 @@ const Index = () => {
               setBlogdata(data?.blog);
             }
           });
-        setIsEdit(false);
         setCommentValue("");
       });
   };
@@ -140,6 +219,20 @@ const Index = () => {
           });
       });
   };
+
+  const setCommentValueCallback = useCallback((data: string) => {
+ 
+    setCommentValue(data);
+  }, []);
+  const handleUpdateCommentCallback = useCallback((data: string) => {
+    console.log(data,commentValue,"data")
+    handleUpdateComment(data);
+  }, [commentValue, handleUpdateComment]);
+
+  
+  const handleDeleteCommentCallback = useCallback((data: string) => {
+    handleDeleteComment(data);
+  }, [handleDeleteComment]);
 
   return (
     <Wrapper>
@@ -246,61 +339,22 @@ const Index = () => {
                     {!!blogData?.comments &&
                       blogData?.comments?.length &&
                       blogData?.comments?.map((comment) => (
-                        <ListItem
+                        <CustomListItem
                           key={comment?._id}
-                          sx={{
-                            backgroundColor: (theme: Theme) =>
-                              theme.palette.action.disabled,
-                            display: "block",
-                            width: "100%",
-                            marginBottom: "10px",
-                          }}
-                        >
-                          <Typography variant="h6">
-                            Author: {comment?.authorId?.fullName}
-                          </Typography>
-                          {isEdit && userId === comment?.authorId?._id ? (
-                            <TextField
-                              placeholder="Enter Comment"
-                              value={commentValue}
-                              onChange={(e) => setCommentValue(e.target.value)}
-                            />
-                          ) : (
-                            <Typography>comment: {comment?.comment}</Typography>
-                          )}
-
-                          
-
-                          {userId === comment?.authorId?._id && (
-                            <>
-                              {!isEdit ? (
-                                <Button
-                                  onClick={() => {
-                                    setIsEdit(true);
-                                    setCommentValue(comment?.comment);
-                                  }}
-                                >
-                                  Edit
-                                </Button>
-                              ) : (
-                                <Button
-                                  onClick={() =>
-                                    handleUpdateComment(comment?._id)
-                                  }
-                                >
-                                  Submit
-                                </Button>
-                              )}
-                              <Button
-                                onClick={() =>
-                                  handleDeleteComment(comment?._id)
-                                }
-                              >
-                                Delete
-                              </Button>
-                            </>
-                          )}
-                        </ListItem>
+                          commentId={comment?._id}
+                          commentValue={commentValue}
+                          authorName={comment?.authorId?.fullName}
+                          comment={comment?.comment}
+                          authorId={comment?.authorId?._id}
+                          userId={userId}
+                          setCommentValueCallback={setCommentValueCallback}
+                          handleUpdateCommentCallback={
+                            handleUpdateCommentCallback
+                          }
+                          handleDeleteCommentCallback={
+                            handleDeleteCommentCallback
+                          }
+                        />
                       ))}
                   </List>
                 </Box>
